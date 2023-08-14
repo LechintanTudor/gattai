@@ -17,7 +17,7 @@ pub enum SpriteSheetFormat {
 impl SpriteSheetFormat {
     #[inline]
     #[must_use]
-    pub fn to_core_format(&self) -> CoreSpriteSheetFormat {
+    pub fn as_core_format(&self) -> CoreSpriteSheetFormat {
         match self {
             Self::Json => CoreSpriteSheetFormat::Json,
             Self::Ron => CoreSpriteSheetFormat::Ron,

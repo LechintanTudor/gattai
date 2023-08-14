@@ -63,7 +63,7 @@ fn main() {
         .save_png(format!("{}.png", args.output))
         .unwrap();
 
-    let format = args.format.to_core_format();
+    let format = args.format.as_core_format();
 
     save_sprite_sheet(
         &sprite_sheet_data,

@@ -1,7 +1,5 @@
-use iced::widget::{
-    column, container, image, pane_grid, row, scrollable, text, Column, Image, PaneGrid, Row,
-};
-use iced::{alignment, executor, Application, Command, Element, Length, Theme};
+use iced::widget::{column, container, image, pane_grid, scrollable, text, Column, PaneGrid};
+use iced::{executor, Application, Command, Element, Length, Theme};
 
 #[derive(Debug)]
 pub enum PaneKind {
@@ -46,14 +44,13 @@ impl Application for SpritePack {
             Message::PaneResized(event) => {
                 self.panes.resize(&event.split, event.ratio);
             }
-            _ => (),
         }
 
         Command::none()
     }
 
     fn view(&self) -> Element<'_, Self::Message> {
-        PaneGrid::new(&self.panes, |pane, kind, is_maximized| {
+        PaneGrid::new(&self.panes, |_pane, kind, _is_maximized| {
             let content = match kind {
                 PaneKind::ImageList => image_list_pane_content(100),
                 PaneKind::SpriteSheet => sprite_sheet_pane_content(),
