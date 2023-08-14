@@ -2,4 +2,5 @@
 members = [
 	"sprite-pack-cli",
 	"sprite-pack-core",
+	"sprite-pack-iced",
 ]
