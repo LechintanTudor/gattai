@@ -42,7 +42,7 @@ impl Application for SpritePack {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
             Message::PaneResized(event) => {
-                self.panes.resize(&event.split, event.ratio);
+                self.panes.resize(event.split, event.ratio);
             }
         }
 

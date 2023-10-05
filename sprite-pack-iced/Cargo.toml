@@ -3,5 +3,7 @@ name = "sprite-pack-iced"
 version = "0.1.0"
 edition = "2021"
 
-[dependencies]
-iced = { version = "0.10", features = ["image"] }
+[dependencies.iced]
+features = ["image"]
+git = "https://github.com/iced-rs/iced.git"
+rev = "bc9bb28b1ccd1248d63ccdfef2f57d7aa837abbb"

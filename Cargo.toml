@@ -4,3 +4,5 @@ members = [
 	"sprite-pack-core",
 	"sprite-pack-iced",
 ]
+
+resolver = "2"
