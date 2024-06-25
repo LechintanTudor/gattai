@@ -13,7 +13,5 @@ fn main() -> anyhow::Result<()> {
     let (images, _) = reader::run(&cli_args);
     let packer_result = packer::run(&cli_args, images);
     let encoder_result = encoder::run(&cli_args, &packer_result);
-
-    println!("{:#?}", encoder_result.sprites);
     writer::run(&cli_args, &encoder_result)
 }

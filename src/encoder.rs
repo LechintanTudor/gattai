@@ -2,8 +2,8 @@ use crate::bounds::Bounds;
 use crate::cli_args::{CliArgs, OutputMode};
 use crate::packer::{PackerResult, Sprite};
 use image::{GenericImage, GenericImageView, Rgba, RgbaImage};
-use rustc_hash::FxHashMap;
 use serde::Serialize;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 #[must_use]
@@ -14,8 +14,9 @@ pub struct EncoderResult {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[serde(untagged)]
 pub enum EncodedSprites {
-    Map(FxHashMap<PathBuf, Bounds>),
+    Map(BTreeMap<PathBuf, Bounds>),
     Array(Vec<EncodedSprite>),
 }
 
@@ -82,15 +83,16 @@ fn build_sprite_sheet_data(
             EncodedSprites::Map(sprites)
         }
         OutputMode::Array => {
-            let sprites = packer_result
+            let mut sprites = packer_result
                 .sprites
                 .iter()
                 .map(|sprite| {
                     let (path, bounds) = get_image_path_and_bounds(sprite);
                     EncodedSprite { path, bounds }
                 })
-                .collect();
+                .collect::<Vec<_>>();
 
+            sprites.sort_unstable_by(|s1, s2| s1.path.cmp(&s2.path));
             EncodedSprites::Array(sprites)
         }
     }
