@@ -1,40 +1,42 @@
+use crate::cli_args::CliArgs;
+use crate::encoder::EncoderResult;
 use anyhow::{anyhow, Context};
 use image::ImageFormat;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::BufWriter;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use crate::cli_args::CliArgs;
-use crate::encoder::EncoderResult;
+#[derive(Clone, Debug)]
+pub struct WriterResult {
+    pub image_file_name: PathBuf,
+    pub sprites_file_name: PathBuf,
+}
 
 pub fn run(
     cli_args: &CliArgs,
     encoder_result: &EncoderResult,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<WriterResult> {
     let (image_extension, image_format) =
         get_image_extension_and_format(&cli_args.output_file)?;
 
-    // Write image file.
-    {
-        let image_file_name =
-            cli_args.output_file.with_extension(image_extension);
+    let image_file_name = cli_args.output_file.with_extension(image_extension);
 
-        encoder_result
-            .image
-            .save_with_format(image_file_name.as_path(), image_format)
-            .with_context(|| {
-                format!(
-                    "Failed to write image file to '{}'",
-                    image_file_name.display(),
-                )
-            })?;
-    }
+    // Write image file.
+    encoder_result
+        .image
+        .save_with_format(image_file_name.as_path(), image_format)
+        .with_context(|| {
+            format!(
+                "Failed to write image file to '{}'",
+                image_file_name.display(),
+            )
+        })?;
+
+    let sprites_file_name = cli_args.output_file.with_extension("json");
 
     // Write sprites file.
     {
-        let sprites_file_name = cli_args.output_file.with_extension("json");
-
         let sprites_writer = File::create(sprites_file_name.as_path())
             .map(BufWriter::new)
             .with_context(|| {
@@ -53,7 +55,10 @@ pub fn run(
         })?;
     }
 
-    Ok(())
+    Ok(WriterResult {
+        image_file_name,
+        sprites_file_name,
+    })
 }
 
 fn get_image_extension_and_format(
