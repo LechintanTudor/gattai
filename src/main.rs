@@ -9,7 +9,7 @@ use crate::cli_args::CliArgs;
 use clap::Parser as _;
 use std::process::ExitCode;
 
-fn main() -> anyhow::Result<ExitCode> {
+fn main() -> ExitCode {
     let cli_args = CliArgs::parse();
     let mut success = true;
 
@@ -19,7 +19,7 @@ fn main() -> anyhow::Result<ExitCode> {
 
         if cli_args.input_files.is_empty() {
             println!(" - No images were supplied. Exiting...");
-            return Ok(ExitCode::FAILURE);
+            return ExitCode::FAILURE;
         }
 
         let (images, image_errors) = reader::run(&cli_args);
@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<ExitCode> {
 
         if images.is_empty() {
             println!(" - No images could be read. Exiting...");
-            return Ok(ExitCode::FAILURE);
+            return ExitCode::FAILURE;
         }
 
         println!(
@@ -95,11 +95,9 @@ fn main() -> anyhow::Result<ExitCode> {
         }
     }
 
-    let exit_code = if success {
+    if success {
         ExitCode::SUCCESS
     } else {
         ExitCode::FAILURE
-    };
-
-    Ok(exit_code)
+    }
 }
