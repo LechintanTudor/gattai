@@ -36,7 +36,7 @@ impl Position {
     }
 }
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Default, Debug, Serialize)]
 pub struct Size {
     pub w: u32,
     pub h: u32,

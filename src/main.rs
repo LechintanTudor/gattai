@@ -86,7 +86,7 @@ fn main() -> ExitCode {
                 );
                 println!(
                     " - Sprite data written to '{}'",
-                    result.sprites_file_name.display(),
+                    result.data_file_name.display(),
                 );
             }
             Err(error) => {

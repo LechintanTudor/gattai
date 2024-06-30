@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 #[derive(Clone, Debug)]
 pub struct WriterResult {
     pub image_file_name: PathBuf,
-    pub sprites_file_name: PathBuf,
+    pub data_file_name: PathBuf,
 }
 
 pub fn run(
@@ -33,31 +33,31 @@ pub fn run(
             )
         })?;
 
-    let sprites_file_name = cli_args.output_file.with_extension("json");
+    let data_file_name = cli_args.output_file.with_extension("json");
 
-    // Write sprites file.
+    // Write data file.
     {
-        let sprites_writer = File::create(sprites_file_name.as_path())
+        let sprites_writer = File::create(data_file_name.as_path())
             .map(BufWriter::new)
             .with_context(|| {
                 format!(
-                    "Failed to open sprites file '{}'",
-                    sprites_file_name.display(),
+                    "Failed to open sprite data file '{}'",
+                    data_file_name.display(),
                 )
             })?;
 
-        serde_json::to_writer_pretty(sprites_writer, &encoder_result.sprites)
+        serde_json::to_writer_pretty(sprites_writer, &encoder_result.data)
             .with_context(|| {
-            format!(
-                "Failed to write sprites file to '{}'",
-                sprites_file_name.display(),
-            )
-        })?;
+                format!(
+                    "Failed to write sprite data file to '{}'",
+                    data_file_name.display(),
+                )
+            })?;
     }
 
     Ok(WriterResult {
         image_file_name,
-        sprites_file_name,
+        data_file_name,
     })
 }
 

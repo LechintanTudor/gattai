@@ -33,42 +33,46 @@ Gattai provides several options to configure its output, such as:
   - `map`: output sprite data as a JSON map:
   ```json
   {
-    "path/to/image1.png": {
-      "x": 0,
-      "y": 0,
-      "w": 16,
-      "h": 16
-    },
-    "path/to/image2.png": {
-      "x": 16,
-      "y": 16,
-      "w": 16,
-      "h": 16
-    }
-  }
-  ```
-  - `array`: output sprite data as a JSON array:
-  ```json
-  [
-    {
-      "path": "path/to/image1.png",
-      "bounds": {
+    "sprites": {
+      "path/to/image1.png": {
         "x": 0,
         "y": 0,
         "w": 16,
         "h": 16
-      }
-    },
-    {
-      "path": "path/to/image2.png",
-      "bounds": {
+      },
+      "path/to/image2.png": {
         "x": 16,
         "y": 16,
         "w": 16,
         "h": 16
       }
     }
-  ]
+  }
+  ```
+  - `array`: output sprite data as a JSON array:
+  ```json
+  {
+    "sprites": [
+      {
+        "path": "path/to/image1.png",
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "w": 16,
+          "h": 16
+        }
+      },
+      {
+        "path": "path/to/image2.png",
+        "bounds": {
+          "x": 16,
+          "y": 16,
+          "w": 16,
+          "h": 16
+        }
+      }
+    ]
+  }
   ```
 - `-p`, `--padding`: configure the padding between the sprites and the border of
   the image.

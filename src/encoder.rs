@@ -1,4 +1,4 @@
-use crate::bounds::Bounds;
+use crate::bounds::{Bounds, Size};
 use crate::cli_args::{CliArgs, OutputMode};
 use crate::packer::{PackerResult, Sprite};
 use image::{GenericImage, GenericImageView, Rgba, RgbaImage};
@@ -10,6 +10,12 @@ use std::path::PathBuf;
 #[derive(Clone, Debug)]
 pub struct EncoderResult {
     pub image: RgbaImage,
+    pub data: EncodedSpriteSheet,
+}
+
+#[derive(Clone, Debug, Serialize)]
+pub struct EncodedSpriteSheet {
+    pub size: Size,
     pub sprites: EncodedSprites,
 }
 
@@ -29,7 +35,7 @@ pub struct EncodedSprite {
 pub fn run(cli_args: &CliArgs, packer_result: &PackerResult) -> EncoderResult {
     EncoderResult {
         image: build_sprite_sheet(cli_args, packer_result),
-        sprites: build_sprite_sheet_data(cli_args, packer_result),
+        data: build_sprite_sheet_data(cli_args, packer_result),
     }
 }
 
@@ -59,7 +65,7 @@ fn build_sprite_sheet(
 fn build_sprite_sheet_data(
     cli_args: &CliArgs,
     packer_result: &PackerResult,
-) -> EncodedSprites {
+) -> EncodedSpriteSheet {
     let get_image_path_and_bounds = |sprite: &Sprite| {
         let image = &packer_result.images[sprite.image_index];
         let path = image.path.clone();
@@ -72,7 +78,7 @@ fn build_sprite_sheet_data(
         (path, bounds)
     };
 
-    match cli_args.output_mode {
+    let sprites = match cli_args.output_mode {
         OutputMode::Map => {
             let sprites = packer_result
                 .sprites
@@ -95,5 +101,10 @@ fn build_sprite_sheet_data(
             sprites.sort_unstable_by(|s1, s2| s1.path.cmp(&s2.path));
             EncodedSprites::Array(sprites)
         }
+    };
+
+    EncodedSpriteSheet {
+        size: packer_result.size,
+        sprites,
     }
 }
