@@ -57,8 +57,12 @@ pub fn run(cli_args: &CliArgs, mut images: Vec<Image>) -> PackerResult {
         );
 
         let mut size = tree.nodes[0].bounds.size();
-        size.w += 2 * padding.w - spacing.w;
-        size.h += 2 * padding.h - spacing.h;
+
+        size.w -= spacing.w;
+        size.w += 2 * padding.w;
+
+        size.h -= spacing.h;
+        size.h += 2 * padding.h;
 
         (size, tree.collect_sprites(padding))
     };
