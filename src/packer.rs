@@ -135,9 +135,7 @@ impl Tree {
         let size =
             Size::new(image_size.w + spacing.w, image_size.h + spacing.h);
 
-        let node_index =
-            self.find(0, size).unwrap_or_else(|| self.grow(0, size));
-
+        let node_index = self.find(0, size).unwrap_or_else(|| self.grow(size));
         self.set_used(node_index, image_index, size);
     }
 
@@ -156,41 +154,40 @@ impl Tree {
         }
     }
 
-    fn grow(&mut self, node_index: usize, size: Size) -> usize {
-        let node = &self.nodes[node_index];
-
-        let can_grow_right = size.h <= node.bounds.h;
-        let can_grow_down = size.w <= node.bounds.w;
+    fn grow(&mut self, size: Size) -> usize {
+        let root = &self.nodes[0];
+        let can_grow_right = size.h <= root.bounds.h;
+        let can_grow_down = size.w <= root.bounds.w;
 
         let should_grow_right =
-            can_grow_right && (node.bounds.w + size.w <= node.bounds.h);
+            can_grow_right && (root.bounds.w + size.w <= root.bounds.h);
 
         let should_grow_down =
-            can_grow_down && (node.bounds.h + size.h <= node.bounds.w);
+            can_grow_down && (root.bounds.h + size.h <= root.bounds.w);
 
         if should_grow_right {
-            self.grow_right(node_index, size.w)
+            self.grow_right(size.w)
         } else if should_grow_down {
-            self.grow_down(node_index, size.h)
+            self.grow_down(size.h)
         } else if can_grow_right {
-            self.grow_right(node_index, size.w)
+            self.grow_right(size.w)
         } else if can_grow_down {
-            self.grow_down(node_index, size.h)
+            self.grow_down(size.h)
         } else {
             panic!("Cannot grow sprite tree");
         }
     }
 
-    fn grow_right(&mut self, node_index: usize, w: u32) -> usize {
-        let bounds = self.nodes[node_index].bounds;
+    fn grow_right(&mut self, w: u32) -> usize {
+        let bounds = self.nodes[0].bounds;
 
         let right_index = self.nodes.len();
         self.nodes.push(Node::unused(bounds.w, 0, w, bounds.h));
 
         let down_index = self.nodes.len();
-        self.nodes.push(self.nodes[node_index]);
+        self.nodes.push(self.nodes[0]);
 
-        self.nodes[node_index] = Node {
+        self.nodes[0] = Node {
             state: NodeState::Used,
             bounds: Bounds::new(0, 0, bounds.w + w, bounds.h),
             children: Some(NodeChildren {
@@ -202,16 +199,16 @@ impl Tree {
         right_index
     }
 
-    fn grow_down(&mut self, node_index: usize, h: u32) -> usize {
-        let bounds = self.nodes[node_index].bounds;
+    fn grow_down(&mut self, h: u32) -> usize {
+        let bounds = self.nodes[0].bounds;
 
         let right_index = self.nodes.len();
-        self.nodes.push(self.nodes[node_index]);
+        self.nodes.push(self.nodes[0]);
 
         let down_index = self.nodes.len();
         self.nodes.push(Node::unused(0, bounds.h, bounds.w, h));
 
-        self.nodes[node_index] = Node {
+        self.nodes[0] = Node {
             state: NodeState::Used,
             bounds: Bounds::new(0, 0, bounds.w, bounds.h + h),
             children: Some(NodeChildren {
