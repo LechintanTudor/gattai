@@ -8,7 +8,7 @@ pub struct CliArgs {
         short,
         long,
         help = "Name of the output sprite sheet file",
-        default_value = "sprite-sheet"
+        default_value = "sprite-sheet.png"
     )]
     pub output_file: PathBuf,
 
