@@ -159,15 +159,14 @@ impl Tree {
     }
 
     fn grow(&mut self, size: Size) -> usize {
-        let root = &self.nodes[0];
-        let can_grow_right = size.h <= root.bounds.h;
-        let can_grow_down = size.w <= root.bounds.w;
+        let bounds = self.nodes[0].bounds;
+        let can_grow_right = size.h <= bounds.h;
+        let can_grow_down = size.w <= bounds.w;
 
         let should_grow_right =
-            can_grow_right && (root.bounds.w + size.w <= root.bounds.h);
+            can_grow_right && (bounds.w + size.w <= bounds.h);
 
-        let should_grow_down =
-            can_grow_down && (root.bounds.h + size.h <= root.bounds.w);
+        let should_grow_down = can_grow_down && (bounds.h + size.h <= bounds.w);
 
         if should_grow_right {
             self.grow_right(size.w)
