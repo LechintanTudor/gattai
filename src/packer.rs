@@ -19,7 +19,7 @@ pub struct Sprite {
 }
 
 pub fn run(cli_args: &CliArgs, mut images: Vec<Image>) -> PackerResult {
-    images.sort_unstable_by_key(|image| {
+    images.sort_by_key(|image| {
         let (w, h) = image.image.dimensions();
         let sizes = if w >= h { (w, h) } else { (h, w) };
         Reverse(sizes)
