@@ -2,6 +2,13 @@
 name = "gattai"
 version = "0.1.0"
 edition = "2021"
+description = "Combine multiple images into a single sprite sheet"
+authors = ["Tudor-Cristian Lechințan <lechintantudor02@gmail.com>"]
+repository = "https://github.com/LechintanTudor/gattai"
+keywords = ["cli", "gamedev", "packer", "sprite", "spritesheet"]
+categories = ["command-line-utilities", "game-development", "multimedia::images"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0"
