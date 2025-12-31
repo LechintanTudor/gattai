@@ -1,61 +1,47 @@
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 
+/// Combine multiple images into a single sprite sheet.
 #[derive(Parser)]
-#[command(about = "Combine multiple images into a single sprite sheet.")]
 pub struct CliArgs {
-    #[arg(
-        short,
-        long,
-        help = "Name of the output sprite sheet file",
-        default_value = "sprite-sheet.png"
-    )]
+    /// Output image file name
+    #[arg(short, long, default_value = "sprite-sheet.png")]
     pub output_file: PathBuf,
 
+    /// Output mode for the data file
     #[arg(
         short = 'm',
         long,
         value_enum,
-        help = "Output mode for the sprite data JSON file",
         default_value_t = OutputMode::Map
     )]
     pub output_mode: OutputMode,
 
-    #[arg(
-        short,
-        long,
-        help = "Padding between the sprites and the edge of the sprite sheet",
-        default_value_t = 1
-    )]
+    /// Padding between the sprites and the edge of the sprite sheet
+    #[arg(short, long, default_value_t = 1)]
     pub padding: u32,
 
-    #[arg(
-        long,
-        help = "Horizontal padding between the sprites and the edge of the sprite sheet"
-    )]
+    /// Horizontal padding between the sprites and the edge of the sprite sheet
+    #[arg(long)]
     pub padding_x: Option<u32>,
 
-    #[arg(
-        long,
-        help = "Vertical padding between the sprites and the edge of the sprite sheet"
-    )]
+    /// Vertical padding between the sprites and the edge of the sprite sheet
+    #[arg(long)]
     pub padding_y: Option<u32>,
 
-    #[arg(
-        short,
-        long,
-        help = "Spacing between the sprites",
-        default_value_t = 1
-    )]
+    /// Spacing between the sprites
+    #[arg(short, long, default_value_t = 1)]
     pub spacing: u32,
 
-    #[arg(long, help = "Horizontal spacing between the sprites")]
+    /// Horizontal spacing between the sprites
+    #[arg(long)]
     pub spacing_x: Option<u32>,
 
-    #[arg(long, help = "Vertical spacing between the sprites")]
+    /// Vertical spacing between the sprites
+    #[arg(long)]
     pub spacing_y: Option<u32>,
 
-    #[arg(help = "Input image files")]
+    /// Input image files
     pub input_files: Vec<PathBuf>,
 }
 
