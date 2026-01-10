@@ -1,110 +1,65 @@
-use crate::bounds::{Bounds, Size};
-use crate::cli_args::{CliArgs, OutputMode};
-use crate::packer::{PackerResult, Sprite};
-use image::{GenericImage, GenericImageView, Rgba, RgbaImage};
+use crate::math::Bounds;
+use crate::packer::PackerResult;
+use image::{GenericImage, RgbaImage};
 use serde::Serialize;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+
+pub type EncodedSpriteMap = BTreeMap<String, EncodedSprite>;
+
+pub struct EncoderResult {
+    pub sprites: EncodedSpriteMap,
+    pub image: RgbaImage,
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+pub enum EncodedSprite {
+    Single(Bounds),
+    Multi(Vec<Bounds>),
+}
 
 #[must_use]
-#[derive(Clone, Debug)]
-pub struct EncoderResult {
-    pub image: RgbaImage,
-    pub data: EncodedSpriteSheet,
-}
+pub fn run(mut packer_result: PackerResult) -> EncoderResult {
+    packer_result.sprites.sort_by(|s1, s2| {
+        (s1.name.cmp(&s2.name)).then_with(|| s1.index.cmp(&s2.index))
+    });
 
-#[derive(Clone, Debug, Serialize)]
-pub struct EncodedSpriteSheet {
-    pub size: Size,
-    pub sprites: EncodedSprites,
-}
+    let mut sprites = BTreeMap::<String, EncodedSprite>::new();
+    let mut image = RgbaImage::new(packer_result.size.w, packer_result.size.h);
 
-#[derive(Clone, Debug, Serialize)]
-#[serde(untagged)]
-pub enum EncodedSprites {
-    Map(BTreeMap<PathBuf, Bounds>),
-    Array(Vec<EncodedSprite>),
-}
+    let mut sprites_iter = packer_result.sprites.into_iter().peekable();
 
-#[derive(Clone, Debug, Serialize)]
-pub struct EncodedSprite {
-    pub path: PathBuf,
-    pub bounds: Bounds,
-}
+    while let Some(sprite) = sprites_iter.next() {
+        let sprite_bounds = sprite.bounds();
 
-pub fn run(cli_args: &CliArgs, packer_result: &PackerResult) -> EncoderResult {
-    EncoderResult {
-        image: build_sprite_sheet(cli_args, packer_result),
-        data: build_sprite_sheet_data(cli_args, packer_result),
-    }
-}
+        let encoded_sprite = if sprite.is_single() {
+            EncodedSprite::Single(sprite_bounds)
+        } else {
+            let mut bounds = vec![sprite_bounds];
 
-fn build_sprite_sheet(
-    _cli_args: &CliArgs,
-    packer_result: &PackerResult,
-) -> RgbaImage {
-    let mut image = RgbaImage::from_pixel(
-        packer_result.size.w,
-        packer_result.size.h,
-        Rgba([0, 0, 0, 0]),
-    );
+            while let Some(sprite) = sprites_iter
+                .next_if(|next_sprite| next_sprite.name == sprite.name)
+            {
+                bounds.push(sprite.bounds());
 
-    for sprite in &packer_result.sprites {
-        image
-            .copy_from(
-                &packer_result.images[sprite.image_index].image,
-                sprite.position.x,
-                sprite.position.y,
-            )
-            .expect("Failed to copy image to sprite sheet");
-    }
+                image
+                    .copy_from(
+                        &sprite.image,
+                        sprite.position.x,
+                        sprite.position.y,
+                    )
+                    .unwrap();
+            }
 
-    image
-}
-
-fn build_sprite_sheet_data(
-    cli_args: &CliArgs,
-    packer_result: &PackerResult,
-) -> EncodedSpriteSheet {
-    let get_image_path_and_bounds = |sprite: &Sprite| {
-        let image = &packer_result.images[sprite.image_index];
-        let path = image.path.clone();
-
-        let bounds = {
-            let (w, h) = image.image.dimensions();
-            Bounds::new(sprite.position.x, sprite.position.y, w, h)
+            EncodedSprite::Multi(bounds)
         };
 
-        (path, bounds)
-    };
+        sprites.insert(sprite.name, encoded_sprite);
 
-    let sprites = match cli_args.output_mode {
-        OutputMode::Map => {
-            let sprites = packer_result
-                .sprites
-                .iter()
-                .map(get_image_path_and_bounds)
-                .collect();
-
-            EncodedSprites::Map(sprites)
-        }
-        OutputMode::Array => {
-            let mut sprites = packer_result
-                .sprites
-                .iter()
-                .map(|sprite| {
-                    let (path, bounds) = get_image_path_and_bounds(sprite);
-                    EncodedSprite { path, bounds }
-                })
-                .collect::<Vec<_>>();
-
-            sprites.sort_unstable_by(|s1, s2| s1.path.cmp(&s2.path));
-            EncodedSprites::Array(sprites)
-        }
-    };
-
-    EncodedSpriteSheet {
-        size: packer_result.size,
-        sprites,
+        image
+            .copy_from(&sprite.image, sprite.position.x, sprite.position.y)
+            .unwrap();
     }
+
+    EncoderResult { sprites, image }
 }

@@ -1,77 +1,17 @@
-use crate::bounds::{Bounds, Position, Size};
-use crate::cli_args::CliArgs;
-use crate::reader::Image;
+use crate::config::Config;
+use crate::math::{Bounds, Position, Size};
+use crate::reader::Sprite;
 use image::GenericImageView;
-use std::cmp::Reverse;
 
-#[must_use]
 #[derive(Default, Debug)]
 pub struct PackerResult {
     pub size: Size,
-    pub images: Vec<Image>,
     pub sprites: Vec<Sprite>,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub struct Sprite {
-    pub image_index: usize,
-    pub position: Position,
-}
-
-pub fn run(cli_args: &CliArgs, mut images: Vec<Image>) -> PackerResult {
-    images.sort_by_key(|image| {
-        let (w, h) = image.image.dimensions();
-        let sizes = if w >= h { (w, h) } else { (h, w) };
-        Reverse(sizes)
-    });
-
-    let Some((first, others)) = images.split_first() else {
-        return PackerResult::default();
-    };
-
-    let (size, sprites) = {
-        let first_size = {
-            let (w, h) = first.image.dimensions();
-            Size::new(w, h)
-        };
-
-        let spacing = Size::new(
-            cli_args.spacing_x.unwrap_or(cli_args.spacing),
-            cli_args.spacing_y.unwrap_or(cli_args.spacing),
-        );
-
-        let mut tree = Tree::new(first_size, spacing);
-
-        for (i, image) in others.iter().enumerate() {
-            let size = {
-                let (w, h) = image.image.dimensions();
-                Size::new(w, h)
-            };
-
-            tree.insert(i, size, spacing);
-        }
-
-        let padding = Size::new(
-            cli_args.padding_x.unwrap_or(cli_args.padding),
-            cli_args.padding_y.unwrap_or(cli_args.padding),
-        );
-
-        let mut size = tree.nodes[0].bounds.size();
-
-        size.w -= spacing.w;
-        size.w += 2 * padding.w;
-
-        size.h -= spacing.h;
-        size.h += 2 * padding.h;
-
-        (size, tree.collect_sprites(padding))
-    };
-
-    PackerResult {
-        size,
-        images,
-        sprites,
-    }
+#[derive(Clone, Debug)]
+struct Tree {
+    nodes: Vec<Node>,
 }
 
 #[derive(Clone, Copy, Default, Debug)]
@@ -79,17 +19,6 @@ struct Node {
     state: NodeState,
     bounds: Bounds,
     children: Option<NodeChildren>,
-}
-
-impl Node {
-    #[must_use]
-    fn unused(x: u32, y: u32, w: u32, h: u32) -> Self {
-        Self {
-            state: NodeState::Unused,
-            bounds: Bounds::new(x, y, w, h),
-            children: None,
-        }
-    }
 }
 
 #[derive(Clone, Copy, Default, Debug)]
@@ -100,23 +29,71 @@ enum NodeState {
     UsedLeaf(usize),
 }
 
-impl NodeState {
-    #[inline]
-    #[must_use]
-    fn is_used(&self) -> bool {
-        matches!(self, Self::Used | Self::UsedLeaf(_))
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
 struct NodeChildren {
     right_index: usize,
     down_index: usize,
 }
 
-#[derive(Clone, Debug)]
-struct Tree {
-    nodes: Vec<Node>,
+pub fn run(config: &Config, mut sprites: Vec<Sprite>) -> PackerResult {
+    sprites.sort_by(|s1, s2| {
+        let size1 = {
+            let (w, h) = s1.image.dimensions();
+
+            if w >= h {
+                (w, h)
+            } else {
+                (h, w)
+            }
+        };
+
+        let size2 = {
+            let (w, h) = s2.image.dimensions();
+
+            if w >= h {
+                (w, h)
+            } else {
+                (h, w)
+            }
+        };
+
+        (size1.cmp(&size2).reverse())
+            .then_with(|| s1.name.cmp(&s2.name))
+            .then_with(|| s1.index.cmp(&s2.index))
+    });
+
+    let Some((first, others)) = sprites.split_first() else {
+        return PackerResult::default();
+    };
+
+    let first_size = {
+        let (w, h) = first.image.dimensions();
+        Size::new(w, h)
+    };
+
+    let spacing = Size::new(config.spacing_x, config.spacing_y);
+    let mut tree = Tree::new(first_size, spacing);
+
+    for (i, image) in others.iter().enumerate() {
+        let size = {
+            let (w, h) = image.image.dimensions();
+            Size::new(w, h)
+        };
+
+        tree.insert(i + 1, size, spacing);
+    }
+
+    let mut size = tree.nodes[0].bounds.size();
+    let padding = Size::new(config.padding_x, config.padding_y);
+
+    size.w -= spacing.w;
+    size.w += 2 * padding.w;
+
+    size.h -= spacing.h;
+    size.h += 2 * padding.h;
+
+    tree.position_sprites(&mut sprites, padding);
+    PackerResult { size, sprites }
 }
 
 impl Tree {
@@ -177,7 +154,7 @@ impl Tree {
         } else if can_grow_down {
             self.grow_down(size.h)
         } else {
-            panic!("Cannot grow sprite tree");
+            panic!("Cannot grow image");
         }
     }
 
@@ -250,23 +227,33 @@ impl Tree {
         });
     }
 
+    fn position_sprites(&self, sprites: &mut [Sprite], padding: Size) {
+        for node in &self.nodes {
+            if let NodeState::UsedLeaf(i) = &node.state {
+                sprites[*i].position = Position::new(
+                    node.bounds.x + padding.w,
+                    node.bounds.y + padding.h,
+                );
+            }
+        }
+    }
+}
+
+impl Node {
     #[must_use]
-    fn collect_sprites(&self, padding: Size) -> Vec<Sprite> {
-        self.nodes
-            .iter()
-            .filter_map(|node| {
-                if let NodeState::UsedLeaf(image_index) = node.state {
-                    Some(Sprite {
-                        image_index,
-                        position: Position::new(
-                            node.bounds.x + padding.w,
-                            node.bounds.y + padding.h,
-                        ),
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>()
+    fn unused(x: u32, y: u32, w: u32, h: u32) -> Self {
+        Self {
+            state: NodeState::Unused,
+            bounds: Bounds::new(x, y, w, h),
+            children: None,
+        }
+    }
+}
+
+impl NodeState {
+    #[inline]
+    #[must_use]
+    fn is_used(&self) -> bool {
+        matches!(self, Self::Used | Self::UsedLeaf(_))
     }
 }
