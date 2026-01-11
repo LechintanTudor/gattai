@@ -1,9 +1,10 @@
 use crate::config::{Config, SpriteNaming};
+use crate::error::{AppError, AppErrorKind, AppResult};
 use crate::math::{Bounds, Position};
 use image::{DynamicImage, ImageError};
 use rayon::iter::{Either, IntoParallelIterator, ParallelIterator};
 use std::fmt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 const DEFAULT_INDEX: isize = -1;
 
@@ -14,19 +15,8 @@ pub struct Sprite {
     pub position: Position,
 }
 
-pub struct ReaderError {
-    pub path: PathBuf,
-    pub kind: ReaderErrorKind,
-}
-
-pub enum ReaderErrorKind {
-    Name,
-    Io,
-    Decode,
-}
-
 #[must_use]
-pub fn run(config: &Config) -> (Vec<Sprite>, Vec<ReaderError>) {
+pub fn run(config: &Config) -> (Vec<Sprite>, Vec<AppError>) {
     config
         .input_paths
         .as_slice()
@@ -70,13 +60,13 @@ impl fmt::Debug for Sprite {
     }
 }
 
-fn read_sprite(
-    path: &Path,
-    naming: SpriteNaming,
-) -> Result<Sprite, ReaderError> {
+fn read_sprite(path: &Path, naming: SpriteNaming) -> AppResult<Sprite> {
     let (name, index) = {
         let Some(stem) = path.file_stem().and_then(|stem| stem.to_str()) else {
-            return err(path, ReaderErrorKind::Name);
+            return Err(AppError {
+                path: path.to_owned(),
+                kind: AppErrorKind::SpriteName,
+            });
         };
 
         let is_animation =
@@ -91,7 +81,10 @@ fn read_sprite(
             let name = fmt_name(&stem[..index_start], naming);
 
             let Ok(index) = stem[index_start..].parse::<isize>() else {
-                return err(path, ReaderErrorKind::Name);
+                return Err(AppError {
+                    path: path.to_owned(),
+                    kind: AppErrorKind::SpriteName,
+                });
             };
 
             (name, index)
@@ -104,12 +97,15 @@ fn read_sprite(
         Ok(image) => image,
         Err(e) => {
             let kind = if matches!(e, ImageError::IoError(_)) {
-                ReaderErrorKind::Io
+                AppErrorKind::FileRead
             } else {
-                ReaderErrorKind::Decode
+                AppErrorKind::FileDecode
             };
 
-            return err(path, kind);
+            return Err(AppError {
+                path: path.to_owned(),
+                kind,
+            });
         }
     };
 
@@ -135,11 +131,4 @@ fn fmt_name(stem: &str, naming: SpriteNaming) -> String {
         SpriteNaming::Title => stem.to_title_case(),
         SpriteNaming::Train => stem.to_train_case(),
     }
-}
-
-fn err<T>(path: &Path, kind: ReaderErrorKind) -> Result<T, ReaderError> {
-    Err(ReaderError {
-        path: path.to_owned(),
-        kind,
-    })
 }

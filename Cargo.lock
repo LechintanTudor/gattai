@@ -417,7 +417,6 @@ dependencies = [
 name = "gattai"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "clap",
  "heck",
  "image",

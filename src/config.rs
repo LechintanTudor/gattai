@@ -1,9 +1,9 @@
-use anyhow::Context;
+use crate::error::{AppError, AppErrorKind, AppResult};
 use clap::{Parser, ValueEnum};
 use image::ImageFormat;
 use std::path::PathBuf;
 
-pub fn read_from_cli_args() -> anyhow::Result<Config> {
+pub fn read_from_cli_args() -> AppResult<Config> {
     CliArgs::parse().try_into()
 }
 
@@ -41,7 +41,7 @@ pub enum SpriteNaming {
 struct CliArgs {
     input: Vec<PathBuf>,
 
-    #[arg(short, long, default_value = "spritesheet.png")]
+    #[arg(short, long, default_value = "atlas.png")]
     output: PathBuf,
 
     #[arg(long, value_enum, default_value_t = SpriteNaming::Camel)]
@@ -67,13 +67,15 @@ struct CliArgs {
 }
 
 impl TryFrom<CliArgs> for Config {
-    type Error = anyhow::Error;
+    type Error = AppError;
 
     fn try_from(args: CliArgs) -> Result<Self, Self::Error> {
-        let output_stem = args
-            .output
-            .file_stem()
-            .context("Failed to extract the file stem from the output path")?;
+        let output_stem = args.output.file_stem().ok_or_else(|| {
+            AppError {
+                path: args.output.clone(),
+                kind: AppErrorKind::SpriteName,
+            }
+        })?;
 
         let mut output_json_path = args.output.clone();
         output_json_path.set_file_name(output_stem);
@@ -82,9 +84,12 @@ impl TryFrom<CliArgs> for Config {
         let image_format = ImageFormat::from_extension(
             args.output.extension().unwrap_or_default(),
         )
-        .context(
-            "Failed to deduce the output image format from the file extension",
-        )?;
+        .ok_or_else(|| {
+            AppError {
+                path: args.output.clone(),
+                kind: AppErrorKind::OutputFormat,
+            }
+        })?;
 
         Ok(Self {
             // Paths
