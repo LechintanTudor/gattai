@@ -11,4 +11,4 @@
 !/README.md
 
 # Whitelisted directories
-/src/
+!/src/
