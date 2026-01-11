@@ -1,4 +1,14 @@
-/images
-/sprite-sheet.*
-/target
-/.vscode
+# Ignore everything
+/*
+
+# Whitelisted files
+!/.gitignore
+!/.rustfmt.toml
+!/Cargo.lock
+!/Cargo.toml
+!/LICENSE-APACHE
+!/LICENSE-MIT
+!/README.md
+
+# Whitelisted directories
+/src/
