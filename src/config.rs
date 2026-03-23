@@ -41,7 +41,7 @@ pub enum SpriteNaming {
 struct CliArgs {
     input: Vec<PathBuf>,
 
-    #[arg(short, long, default_value = "atlas.png")]
+    #[arg(short, long, default_value = "spritesheet.png")]
     output: PathBuf,
 
     #[arg(long, value_enum, default_value_t = SpriteNaming::Camel)]
@@ -70,11 +70,9 @@ impl TryFrom<CliArgs> for Config {
     type Error = AppError;
 
     fn try_from(args: CliArgs) -> Result<Self, Self::Error> {
-        let output_stem = args.output.file_stem().ok_or_else(|| {
-            AppError {
-                path: args.output.clone(),
-                kind: AppErrorKind::SpriteName,
-            }
+        let output_stem = args.output.file_stem().ok_or_else(|| AppError {
+            path: args.output.clone(),
+            kind: AppErrorKind::SpriteName,
         })?;
 
         let mut output_json_path = args.output.clone();
@@ -84,11 +82,9 @@ impl TryFrom<CliArgs> for Config {
         let image_format = ImageFormat::from_extension(
             args.output.extension().unwrap_or_default(),
         )
-        .ok_or_else(|| {
-            AppError {
-                path: args.output.clone(),
-                kind: AppErrorKind::OutputFormat,
-            }
+        .ok_or_else(|| AppError {
+            path: args.output.clone(),
+            kind: AppErrorKind::OutputFormat,
         })?;
 
         Ok(Self {
@@ -104,8 +100,8 @@ impl TryFrom<CliArgs> for Config {
             // Spacing
             padding_x: args.padding_x.unwrap_or(args.padding),
             padding_y: args.padding_y.unwrap_or(args.padding),
-            spacing_x: args.padding_x.unwrap_or(args.spacing),
-            spacing_y: args.padding_y.unwrap_or(args.spacing),
+            spacing_x: args.spacing_x.unwrap_or(args.spacing),
+            spacing_y: args.spacing_y.unwrap_or(args.spacing),
         })
     }
 }
