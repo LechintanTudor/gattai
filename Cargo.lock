@@ -415,7 +415,7 @@ dependencies = [
 
 [[package]]
 name = "gattai"
-version = "0.1.0"
+version = "26.3.0"
 dependencies = [
  "clap",
  "heck",
