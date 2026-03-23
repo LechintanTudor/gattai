@@ -37,31 +37,41 @@ pub enum SpriteNaming {
     Train,
 }
 
+/// Spritesheet generator.
 #[derive(Clone, Debug, Parser)]
 struct CliArgs {
+    /// Input image files.
     input: Vec<PathBuf>,
 
+    /// Output image file.
     #[arg(short, long, default_value = "spritesheet.png")]
     output: PathBuf,
 
+    /// Sprite naming scheme.
     #[arg(long, value_enum, default_value_t = SpriteNaming::Camel)]
     sprite_naming: SpriteNaming,
 
+    /// Image padding.
     #[arg(short, long, default_value_t = 1)]
     padding: u32,
 
+    /// Horizontal image padding.
     #[arg(long)]
     padding_x: Option<u32>,
 
+    /// Vertical image padding.
     #[arg(long)]
     padding_y: Option<u32>,
 
+    /// Sprite spacing.
     #[arg(short, long, default_value_t = 1)]
     spacing: u32,
 
+    /// Horizontal sprite spacing.
     #[arg(long)]
     spacing_x: Option<u32>,
 
+    /// Vertical sprite spacing.
     #[arg(long)]
     spacing_y: Option<u32>,
 }

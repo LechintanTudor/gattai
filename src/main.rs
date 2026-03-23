@@ -9,8 +9,10 @@ mod writer;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
+    let config_result = config::read_from_cli_args();
+
     println!("[Config]");
-    let config = match config::read_from_cli_args() {
+    let config = match config_result {
         Ok(config) => {
             println!(" - Config read and parsed successfully");
             config
