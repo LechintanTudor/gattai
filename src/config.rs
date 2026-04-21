@@ -39,6 +39,7 @@ pub enum SpriteNaming {
 
 /// Spritesheet generator.
 #[derive(Clone, Debug, Parser)]
+#[command(version)]
 struct CliArgs {
     /// Input image files.
     input: Vec<PathBuf>,
