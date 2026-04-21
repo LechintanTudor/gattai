@@ -39,22 +39,12 @@ pub fn run(config: &Config, mut sprites: Vec<Sprite>) -> PackerResult {
     sprites.sort_by(|s1, s2| {
         let size1 = {
             let (w, h) = s1.image.dimensions();
-
-            if w >= h {
-                (w, h)
-            } else {
-                (h, w)
-            }
+            if w >= h { (w, h) } else { (h, w) }
         };
 
         let size2 = {
             let (w, h) = s2.image.dimensions();
-
-            if w >= h {
-                (w, h)
-            } else {
-                (h, w)
-            }
+            if w >= h { (w, h) } else { (h, w) }
         };
 
         (size1.cmp(&size2).reverse())
