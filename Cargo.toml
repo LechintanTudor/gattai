@@ -1,6 +1,6 @@
 [package]
 name = "gattai"
-version = "26.3.0"
+version = "26.4.0"
 edition = "2024"
 description = "Combine multiple images into a single spritesheet"
 authors = ["Tudor-Cristian Lechințan <lechintantudor02@gmail.com>"]
