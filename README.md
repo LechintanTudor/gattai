@@ -16,7 +16,7 @@ Gattai has a simple and easy-to-use CLI interface powered by
 [`clap`](https://github.com/clap-rs/clap).
 
 ```shell
-gattai -o sprite-sheet.png images/**/*.png
+gattai -o spritesheet.png images/**/*.png
 ```
 
 This command will output two files:
