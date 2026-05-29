@@ -54,7 +54,7 @@ fn main() -> ExitCode {
         packer_result.size.h,
     );
 
-    let encoder_result = encoder::run(packer_result);
+    let encoder_result = encoder::run(&config, packer_result);
 
     println!("\n[Writer]");
     match writer::run(&config, &encoder_result) {

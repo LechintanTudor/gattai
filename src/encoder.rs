@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::math::Bounds;
 use crate::packer::PackerResult;
 use image::{GenericImage, RgbaImage};
@@ -7,8 +8,8 @@ use std::collections::BTreeMap;
 pub type EncodedSpriteMap = BTreeMap<String, EncodedSprite>;
 
 pub struct EncoderResult {
-    pub sprites: EncodedSpriteMap,
     pub image: RgbaImage,
+    pub sprites: EncodedSpriteMap,
 }
 
 #[derive(Serialize)]
@@ -19,18 +20,27 @@ pub enum EncodedSprite {
 }
 
 #[must_use]
-pub fn run(mut packer_result: PackerResult) -> EncoderResult {
+pub fn run(config: &Config, mut packer_result: PackerResult) -> EncoderResult {
     packer_result.sprites.sort_by(|s1, s2| {
         (s1.name.cmp(&s2.name)).then_with(|| s1.index.cmp(&s2.index))
     });
 
+    let mut image = RgbaImage::from_pixel(
+        packer_result.size.w,
+        packer_result.size.h,
+        config.image_background,
+    );
+
     let mut sprites = BTreeMap::<String, EncodedSprite>::new();
-    let mut image = RgbaImage::new(packer_result.size.w, packer_result.size.h);
 
     let mut sprites_iter = packer_result.sprites.into_iter().peekable();
 
     while let Some(sprite) = sprites_iter.next() {
         let sprite_bounds = sprite.bounds();
+
+        image
+            .copy_from(&sprite.image, sprite.position.x, sprite.position.y)
+            .unwrap();
 
         let encoded_sprite = if sprite.is_single() {
             EncodedSprite::Single(sprite_bounds)
@@ -40,8 +50,6 @@ pub fn run(mut packer_result: PackerResult) -> EncoderResult {
             while let Some(sprite) = sprites_iter
                 .next_if(|next_sprite| next_sprite.name == sprite.name)
             {
-                bounds.push(sprite.bounds());
-
                 image
                     .copy_from(
                         &sprite.image,
@@ -49,16 +57,14 @@ pub fn run(mut packer_result: PackerResult) -> EncoderResult {
                         sprite.position.y,
                     )
                     .unwrap();
+
+                bounds.push(sprite.bounds());
             }
 
             EncodedSprite::Multi(bounds)
         };
 
         sprites.insert(sprite.name, encoded_sprite);
-
-        image
-            .copy_from(&sprite.image, sprite.position.x, sprite.position.y)
-            .unwrap();
     }
 
     EncoderResult { sprites, image }
