@@ -67,5 +67,5 @@ pub fn run(config: &Config, mut packer_result: PackerResult) -> EncoderResult {
         sprites.insert(sprite.name, encoded_sprite);
     }
 
-    EncoderResult { sprites, image }
+    EncoderResult { image, sprites }
 }
