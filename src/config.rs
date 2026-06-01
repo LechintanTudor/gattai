@@ -86,11 +86,9 @@ impl TryFrom<CliArgs> for Config {
     type Error = AppError;
 
     fn try_from(args: CliArgs) -> Result<Self, Self::Error> {
-        let output_stem = args.output.file_stem().ok_or_else(|| {
-            AppError {
-                path: args.output.clone(),
-                kind: AppErrorKind::SpriteName,
-            }
+        let output_stem = args.output.file_stem().ok_or_else(|| AppError {
+            path: args.output.clone(),
+            kind: AppErrorKind::SpriteName,
         })?;
 
         let mut output_json_path = args.output.clone();
@@ -100,11 +98,9 @@ impl TryFrom<CliArgs> for Config {
         let image_format = ImageFormat::from_extension(
             args.output.extension().unwrap_or_default(),
         )
-        .ok_or_else(|| {
-            AppError {
-                path: args.output.clone(),
-                kind: AppErrorKind::OutputFormat,
-            }
+        .ok_or_else(|| AppError {
+            path: args.output.clone(),
+            kind: AppErrorKind::OutputFormat,
         })?;
 
         Ok(Self {
@@ -128,6 +124,8 @@ impl TryFrom<CliArgs> for Config {
 }
 
 fn parse_hex_color(input: &str) -> Result<Rgba<u8>, &'static str> {
+    let input = input.strip_prefix('#').unwrap_or(input);
+
     if input.len() != 6 && input.len() != 8 {
         return Err("invalid color length");
     }
