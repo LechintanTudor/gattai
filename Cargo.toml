@@ -20,4 +20,4 @@ serde = { version = "1.0", features = ["derive"] }
 
 [lints.clippy]
 pedantic = { level = "warn", priority = -1 }
-wildcard-imports = "allow"
+wildcard_imports = "allow"
